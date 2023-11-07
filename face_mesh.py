@@ -27,6 +27,9 @@ if __name__ == "__main__":
         cap = cv2.VideoCapture(video_num)
     else:
         cap = cv2.VideoCapture(args.video)
+
+    cv2.namedWindow("MediaPipe Face Mesh", cv2.WINDOW_NORMAL)
+
     with mp_face_mesh.FaceMesh(
         max_num_faces=1,
         refine_landmarks=True,
@@ -75,13 +78,24 @@ if __name__ == "__main__":
                  'Visibility': data_point.visibility,
              } for data_point in face_landmarks.landmark]
             print(f"{type(landmarks)=}")
-            points = [landmarks[i] for i in (0, 3, 14, 17, 57, 287)]
+            points = [landmarks[i] for i in (0, 13, 14, 17, 57, 287)]
+            colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255),
+                      (128, 128, 0), (0, 128, 128), (0, 0, 128),]
+            for j, p in enumerate(points):
+                x = int(p["x"] * image.shape[1])
+                y = int(p["y"] * image.shape[0])
+                cv2.circle(image, (x, y), 5, color=colors[j % 6], thickness=3 )
+                cv2.putText(image, f"{j}", org=(x, y), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.5, color=colors[j % 6], thickness=3)
             xmin = min((p["x"] for p in points))
             xmax = max((p["x"] for p in points))
             ymin = min((p["y"] for p in points))
             ymax = max((p["y"] for p in points))
             print(f"{xmin} {ymin} {xmax} {ymax}")
-            # cv2.rectangle(image, (xmin, ymin), (xmax, ymax), (0,255,0), 3)
+            xmin = int(xmin * image.shape[1])
+            xmax = int(xmax * image.shape[1])
+            ymin = int(ymin * image.shape[0])
+            ymax = int(ymax * image.shape[0])
+            cv2.rectangle(image, (xmin, ymin), (xmax, ymax), (0,255,0), 3)
             cv2.imshow("MediaPipe Face Mesh", cv2.flip(image, 1))
             if cv2.waitKey(5) & 0xFF == 27:
                 break
