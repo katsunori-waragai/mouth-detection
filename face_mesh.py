@@ -1,6 +1,8 @@
 """
 mediapipe を用いて顔のメッシュを描画するサンプルスクリプト
 # https://yoppa.org/mit-design4-22/14113.html
+
+https://github.com/google/mediapipe/issues/1020
 """
 
 import cv2
@@ -65,6 +67,21 @@ if __name__ == "__main__":
                         landmark_drawing_spec=None,
                         connection_drawing_spec=mp_drawing_styles.get_default_face_mesh_iris_connections_style(),
                     )
+            print(face_landmarks.landmark)
+            landmarks = [{
+                 'x': data_point.x,
+                 'y': data_point.y,
+                 'z': data_point.z,
+                 'Visibility': data_point.visibility,
+             } for data_point in face_landmarks.landmark]
+            print(f"{type(landmarks)=}")
+            points = [landmarks[i] for i in (0, 3, 14, 17, 57, 287)]
+            xmin = min((p["x"] for p in points))
+            xmax = max((p["x"] for p in points))
+            ymin = min((p["y"] for p in points))
+            ymax = max((p["y"] for p in points))
+            print(f"{xmin} {ymin} {xmax} {ymax}")
+            # cv2.rectangle(image, (xmin, ymin), (xmax, ymax), (0,255,0), 3)
             cv2.imshow("MediaPipe Face Mesh", cv2.flip(image, 1))
             if cv2.waitKey(5) & 0xFF == 27:
                 break
