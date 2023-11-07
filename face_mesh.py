@@ -70,14 +70,12 @@ if __name__ == "__main__":
                         landmark_drawing_spec=None,
                         connection_drawing_spec=mp_drawing_styles.get_default_face_mesh_iris_connections_style(),
                     )
-            print(face_landmarks.landmark)
             landmarks = [{
                  'x': data_point.x,
                  'y': data_point.y,
                  'z': data_point.z,
                  'Visibility': data_point.visibility,
              } for data_point in face_landmarks.landmark]
-            print(f"{type(landmarks)=}")
             points = [landmarks[i] for i in (0, 13, 14, 17, 57, 287)]
             colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255),
                       (128, 128, 0), (0, 128, 128), (0, 0, 128),]
@@ -90,7 +88,6 @@ if __name__ == "__main__":
             xmax = max((p["x"] for p in points))
             ymin = min((p["y"] for p in points))
             ymax = max((p["y"] for p in points))
-            print(f"{xmin} {ymin} {xmax} {ymax}")
             xmin = int(xmin * image.shape[1])
             xmax = int(xmax * image.shape[1])
             ymin = int(ymin * image.shape[0])
