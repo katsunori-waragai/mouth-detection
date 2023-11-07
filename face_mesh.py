@@ -1,4 +1,8 @@
+"""
+mediapipe を用いて顔のメッシュを描画するサンプルスクリプト
 # https://yoppa.org/mit-design4-22/14113.html
+"""
+
 import cv2
 import mediapipe as mp
 mp_drawing = mp.solutions.drawing_utils
