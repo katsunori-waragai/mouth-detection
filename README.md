@@ -10,9 +10,13 @@ pip install mediapipe
 ```
 
 ## sample code
-mediapipe を用いて顔のメッシュを描画するサンプルスクリプト
+mediapipe を用いて顔のメッシュを描画するサンプルスクリプトを改造。
+
 ```
-$ python face_mesh.py 
+$ python face_mesh.py -h
+
+$ python face_mesh.py /dev/video0
+
 ```
 
 ## 制限

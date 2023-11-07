@@ -1,7 +1,12 @@
 """
 mediapipe を用いて顔のメッシュを描画するサンプルスクリプト
+# 雛形にしたコード
 # https://yoppa.org/mit-design4-22/14113.html
 
+mediapipe の各landmarkの位置
+https://storage.googleapis.com/mediapipe-assets/documentation/mediapipe_face_landmark_fullsize.png
+
+Extract the landmarks of pose tracker in python
 https://github.com/google/mediapipe/issues/1020
 """
 
