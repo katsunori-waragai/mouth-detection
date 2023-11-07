@@ -85,7 +85,7 @@ if __name__ == "__main__":
                 x = int(p["x"] * image.shape[1])
                 y = int(p["y"] * image.shape[0])
                 cv2.circle(image, (x, y), 5, color=colors[j % 6], thickness=3 )
-                cv2.putText(image, f"{j}", org=(x, y), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.5, color=colors[j % 6], thickness=3)
+                cv2.putText(image, f"{j}", org=(x, y), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.5, color=colors[j % 6], thickness=2)
             xmin = min((p["x"] for p in points))
             xmax = max((p["x"] for p in points))
             ymin = min((p["y"] for p in points))
@@ -95,8 +95,10 @@ if __name__ == "__main__":
             xmax = int(xmax * image.shape[1])
             ymin = int(ymin * image.shape[0])
             ymax = int(ymax * image.shape[0])
-            cv2.rectangle(image, (xmin, ymin), (xmax, ymax), (0,255,0), 3)
-            cv2.imshow("MediaPipe Face Mesh", cv2.flip(image, 1))
+            ratio = (ymax - ymin) / (xmax - xmin)
+            cv2.rectangle(image, (xmin, ymin), (xmax, ymax), (0, 255, 0), 3)
+            cv2.putText(image, f"{ratio=:.2f}", org=(xmin, ymin - 10), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.5, color=colors[1], thickness=2)
+            cv2.imshow("MediaPipe Face Mesh", image)
             if cv2.waitKey(5) & 0xFF == 27:
                 break
     cap.release()
