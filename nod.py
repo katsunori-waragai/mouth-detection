@@ -8,40 +8,10 @@ import os
 import cv2
 import numpy as np
 
-fourcc = cv2.VideoWriter_fourcc(*'XVID')
-out_movie = "nodcontrol.avi"
-out = cv2.VideoWriter(out_movie, fourcc, 20.0, (640, 480))
-
-
-# dinstance function
+# distance function
 def distance(x, y):
     import math
     return math.sqrt((x[0] - y[0]) ** 2 + (x[1] - y[1]) ** 2)
-
-
-# capture source video
-cap = cv2.VideoCapture(0)
-
-# params for ShiTomasi corner detection
-feature_params = dict(maxCorners=100,
-                      qualityLevel=0.3,
-                      minDistance=7,
-                      blockSize=7)
-# Parameters for lucas kanade optical flow
-lk_params = dict(winSize=(15, 15),
-                 maxLevel=2,
-                 criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
-
-
-xmlname = Path('haarcascade_frontalface_alt.xml')
-
-if not xmlname.is_file():
-    cmd = "wget https://raw.githubusercontent.com/opencv/opencv/master/data/haarcascades/haarcascade_frontalface_alt.xml"
-    os.system(cmd)
-
-# path to face cascde
-face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_alt.xml')
-
 
 # function to get coordinates
 def get_coords(p1):
@@ -52,6 +22,32 @@ def get_coords(p1):
 
 
 if __name__ == "__main__":
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    out_movie = "nodcontrol.avi"
+    out = cv2.VideoWriter(out_movie, fourcc, 20.0, (640, 480))
+
+    # capture source video
+    cap = cv2.VideoCapture(0)
+
+    # params for ShiTomasi corner detection
+    feature_params = dict(maxCorners=100,
+                          qualityLevel=0.3,
+                          minDistance=7,
+                          blockSize=7)
+    # Parameters for lucas kanade optical flow
+    lk_params = dict(winSize=(15, 15),
+                     maxLevel=2,
+                     criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
+
+    xmlname = Path('haarcascade_frontalface_alt.xml')
+
+    if not xmlname.is_file():
+        cmd = "wget https://raw.githubusercontent.com/opencv/opencv/master/data/haarcascades/haarcascade_frontalface_alt.xml"
+        os.system(cmd)
+
+    # path to face cascde
+    face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_alt.xml')
+
     # define font and text color
     font = cv2.FONT_HERSHEY_SIMPLEX
 
