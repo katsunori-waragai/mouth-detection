@@ -1,6 +1,14 @@
 """
-copied forom
+うなづき検出プログラム
+copied from
 https://gist.github.com/smeschke/e59a9f5a40f0b0ed73305d34695d916b
+
+TODO:
+- 頷き判定をclassに実装すること
+- 顔検出部分にOpenCVのHaarCascadeを前提とせずに、他の検出器の検出結果を持ってこれるようすること。
+- 判定のしきい値の調整を考えること
+- ロジックと表示を分離すること
+
 """
 from pathlib import Path
 import os
@@ -24,7 +32,7 @@ def get_coords(p1):
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="face_mash")
+    parser = argparse.ArgumentParser(description="detect nod")
     parser.add_argument("video", help="video_file")
     args = parser.parse_args()
 
