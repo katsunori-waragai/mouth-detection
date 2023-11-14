@@ -22,12 +22,22 @@ def get_coords(p1):
 
 
 if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="face_mash")
+    parser.add_argument("video", help="video_file")
+    args = parser.parse_args()
+
+    if args.video.find("/dev/video") == 0:
+        video_num = int(args.video.replace("/dev/video", ""))
+        cap = cv2.VideoCapture(video_num)
+    else:
+        cap = cv2.VideoCapture(args.video)
+
+
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
     out_movie = "nodcontrol.avi"
     out = cv2.VideoWriter(out_movie, fourcc, 20.0, (640, 480))
-
-    # capture source video
-    cap = cv2.VideoCapture(0)
 
     # params for ShiTomasi corner detection
     feature_params = dict(maxCorners=100,
@@ -81,6 +91,8 @@ if __name__ == "__main__":
 
     while True:
         ret, frame = cap.read()
+        if frame is None:
+            break
         old_gray = frame_gray.copy()
         frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         p1, st, err = cv2.calcOpticalFlowPyrLK(old_gray, frame_gray, p0, None, **lk_params)
@@ -115,8 +127,8 @@ if __name__ == "__main__":
 
         cv2.imshow('image', frame)
         out.write(frame)
-        cv2.waitKey(1)
-
+        if cv2.waitKey(1) & 0xff == ord('q'):
+            break
     cv2.destroyAllWindows()
     cap.release()
 
