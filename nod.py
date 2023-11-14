@@ -119,7 +119,7 @@ if __name__ == "__main__":
 
         if x_movement > gesture_threshold:
             gesture = 'No'
-        if y_movement > gesture_threshold:
+        elif y_movement > gesture_threshold:
             gesture = 'Yes'
         if gesture and gesture_show > 0:
             cv2.putText(frame, 'Gesture Detected: ' + gesture, (50, 50), font, 1.2, (0, 0, 255), 3)
