@@ -43,8 +43,8 @@ def get_coords(p1):
 
 @dataclass
 class NodDetector:
-    p0: Tuple[float] = ((0.0, 0.0))
-    p1: Tuple[float] = ((0.0, 0.0))
+    p0: Tuple[float] = None
+    p1: Tuple[float] = None
     # Parameters for lucas kanade optical flow
     lk_params = dict(winSize=(15, 15),
                      maxLevel=2,
@@ -64,26 +64,25 @@ class NodDetector:
     frame_gray = None
     def get_gesture(self, frame):
         gesture = False
-        if self.frame_gray is None:
-            return False, None, None, None
 
-        self.old_gray = self.frame_gray.copy()
         self.frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         if self.old_gray is None or self.frame_gray is None:
             return False, None, None, None
         self.p1, st, err = cv2.calcOpticalFlowPyrLK(self.old_gray, self.frame_gray, self.p0, None, **self.lk_params)
         # get the xy coordinates for points p0 and p1
-        a, b = get_coords(p0), get_coords(p1)
-        x_movement += abs(a[0] - b[0])
-        y_movement += abs(a[1] - b[1])
+        a, b = get_coords(self.p0), get_coords(self.p1)
+        self.x_movement += abs(a[0] - b[0])
+        self.y_movement += abs(a[1] - b[1])
         self.p0 = self.p1
+        if self.frame_gray is not None:
+            self.old_gray = self.frame_gray.copy()
 
-        if x_movement > gesture_threshold:
+        if self.x_movement > self.gesture_threshold:
             gesture = 'No'
-        elif y_movement > gesture_threshold:
+        elif self.y_movement > self.gesture_threshold:
             gesture = 'Yes'
 
-        return gesture, p1, x_movement, y_movement
+        return gesture, self.p1, self.x_movement, self.y_movement
 
 
 if __name__ == "__main__":
@@ -151,14 +150,14 @@ if __name__ == "__main__":
             break
         gesture, p1, x_movement, y_movement = nod_detector.get_gesture(frame)
         print(f"{nod_detector.p0=} {nod_detector.p1=}")
-        if nod_detector.p1 is not None:
+        if nod_detector.p1 is not None or nod_detector.p1 is False:
+            print(f"{nod_detector.p1=}")
+            point1 = get_coords(nod_detector.p1)
+            print(f"{point1=}")
             cv2.circle(frame, center=get_coords(nod_detector.p1), radius=4, color=(0, 0, 255), thickness=-1)
+        if nod_detector.p0 is not None or nod_detector.p0 is False:
+            print(f"{nod_detector.p0=}")
             cv2.circle(frame, center=get_coords(nod_detector.p0), radius=4, color=(255, 0, 0))
-
-        # get the xy coordinates for points p0 and p1
-        # a, b = get_coords(p0), get_coords(p1)
-        # x_movement += abs(a[0] - b[0])
-        # y_movement += abs(a[1] - b[1])
 
         text = 'x_movement: ' + str(x_movement)
         if not gesture: cv2.putText(frame, text, (50, 50), font, 0.8, (0, 0, 255), 2)
@@ -174,9 +173,6 @@ if __name__ == "__main__":
             nod_detector.y_movement = 0
             nod_detector.gesture_show = 60  # number of frames a gesture is shown
 
-        # print distance(get_coords(p0), get_coords(p1))
-        p0 = p1
-        nod_detector.p0 = p0
 
         cv2.imshow('image', frame)
         out.write(frame)
