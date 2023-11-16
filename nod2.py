@@ -25,9 +25,8 @@ def distance(x, y):
 
 # function to get coordinates
 def get_coords(p1):
-    print(f"{p1=}")
     if p1 is None:
-        return False
+        return None
     if type(p1[0]) in (type(1), type(3.14)):
         return int(p1[0]), int(p1[1])
     elif type(p1[0][0]) in (type(1), type(3.14)):
@@ -36,9 +35,6 @@ def get_coords(p1):
         return int(p1[0][0][0]), int(p1[0][0][1])
     else:
         return int(p1[0][0][0]), int(p1[0][0][1])
-        # print(f"{p1=}")
-        # raise Error
-        # return False
 
 
 @dataclass
@@ -142,7 +138,6 @@ if __name__ == "__main__":
         cv2.waitKey(1)
     face_center = x + w / 2, y + h / 3
     p0 = np.array([[face_center]], np.float32)
-    print(f"{p0=}")
 
     input("hit return key")
 
@@ -157,14 +152,9 @@ if __name__ == "__main__":
         counter += 1
         gesture, p1, x_movement, y_movement = nod_detector.get_gesture(frame)
         mean_count = np.mean(frame.flatten())
-        print(f"{counter} {mean_count} {nod_detector.p0=} {nod_detector.p1=}")
-        if nod_detector.p1 is not None or nod_detector.p1 is False:
-            print(f"{nod_detector.p1=}")
-            point1 = get_coords(nod_detector.p1)
-            print(f"{point1=}")
+        if nod_detector.p1 is not None:
             cv2.circle(frame, center=get_coords(nod_detector.p1), radius=4, color=(0, 0, 255), thickness=-1)
-        if nod_detector.p0 is not None or nod_detector.p0 is False:
-            print(f"{nod_detector.p0=}")
+        if nod_detector.p0 is not None:
             cv2.circle(frame, center=get_coords(nod_detector.p0), radius=4, color=(255, 0, 0))
 
         text = 'x_movement: ' + str(x_movement)
@@ -180,7 +170,6 @@ if __name__ == "__main__":
             nod_detector.x_movement = 0
             nod_detector.y_movement = 0
             nod_detector.gesture_show = 60  # number of frames a gesture is shown
-
 
         cv2.imshow('image', frame)
         out.write(frame)
