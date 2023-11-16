@@ -67,13 +67,17 @@ class NodDetector:
 
         self.frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         if self.old_gray is None or self.frame_gray is None:
+            print("warn skipped calcOpticalFlowPyrLK()")
+            if self.frame_gray is not None:
+                self.old_gray = self.frame_gray.copy()
             return False, None, None, None
         self.p1, st, err = cv2.calcOpticalFlowPyrLK(self.old_gray, self.frame_gray, self.p0, None, **self.lk_params)
+        assert self.p1 is not None
         # get the xy coordinates for points p0 and p1
         a, b = get_coords(self.p0), get_coords(self.p1)
         self.x_movement += abs(a[0] - b[0])
         self.y_movement += abs(a[1] - b[1])
-        self.p0 = self.p1
+        self.p0 = self.p1.copy()
         if self.frame_gray is not None:
             self.old_gray = self.frame_gray.copy()
 
@@ -144,12 +148,16 @@ if __name__ == "__main__":
 
     nod_detector = NodDetector(p0=p0)
 
+    counter = 0
+
     while True:
         ret, frame = cap.read()
         if frame is None:
             break
+        counter += 1
         gesture, p1, x_movement, y_movement = nod_detector.get_gesture(frame)
-        print(f"{nod_detector.p0=} {nod_detector.p1=}")
+        mean_count = np.mean(frame.flatten())
+        print(f"{counter} {mean_count} {nod_detector.p0=} {nod_detector.p1=}")
         if nod_detector.p1 is not None or nod_detector.p1 is False:
             print(f"{nod_detector.p1=}")
             point1 = get_coords(nod_detector.p1)
