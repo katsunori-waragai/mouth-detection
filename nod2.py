@@ -63,7 +63,7 @@ class NodDetector:
 
         self.frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         if self.old_gray is None or self.frame_gray is None:
-            print("warn skipped calcOpticalFlowPyrLK()")
+            # print("warn skipped calcOpticalFlowPyrLK()")
             if self.frame_gray is not None:
                 self.old_gray = self.frame_gray.copy()
             return False, None, None, None
@@ -84,6 +84,14 @@ class NodDetector:
 
         return gesture, self.p1, self.x_movement, self.y_movement
 
+    def post_process(self):
+        if self.gesture and self.gesture_show > 0:
+            self.gesture_show -= 1
+        if self.gesture_show == 0:
+            self.gesture = False
+            self.x_movement = 0
+            self.y_movement = 0
+            self.gesture_show = 60  # number of frames a gesture is shown
 
 if __name__ == "__main__":
     import argparse
@@ -139,8 +147,6 @@ if __name__ == "__main__":
     face_center = x + w / 2, y + h / 3
     p0 = np.array([[face_center]], np.float32)
 
-    input("hit return key")
-
     nod_detector = NodDetector(p0=p0)
 
     counter = 0
@@ -162,14 +168,10 @@ if __name__ == "__main__":
         text = 'y_movement: ' + str(y_movement)
         if not gesture: cv2.putText(frame, text, (50, 100), font, 0.8, (0, 0, 255), 2)
 
-        if gesture and nod_detector.gesture_show > 0:
+        if nod_detector.gesture and nod_detector.gesture_show > 0:
             cv2.putText(frame, 'Gesture Detected: ' + gesture, (50, 50), font, 1.2, (0, 0, 255), 3)
-            nod_detector.gesture_show -= 1
-        if nod_detector.gesture_show == 0:
-            nod_detector.gesture = False
-            nod_detector.x_movement = 0
-            nod_detector.y_movement = 0
-            nod_detector.gesture_show = 60  # number of frames a gesture is shown
+
+        nod_detector.post_process()
 
         cv2.imshow('image', frame)
         out.write(frame)
