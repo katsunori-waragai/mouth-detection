@@ -13,6 +13,19 @@ https://github.com/google/mediapipe/issues/1020
 import cv2
 import mediapipe as mp
 
+
+def get_corner_points(points):
+    global xmin, xmax, ymin, ymax
+    xmin = min((p["x"] for p in points))
+    xmax = max((p["x"] for p in points))
+    ymin = min((p["y"] for p in points))
+    ymax = max((p["y"] for p in points))
+    xmin = int(xmin * image.shape[1])
+    xmax = int(xmax * image.shape[1])
+    ymin = int(ymin * image.shape[0])
+    ymax = int(ymax * image.shape[0])
+    return xmin, ymin, xmax, ymax
+
 if __name__ == "__main__":
     import argparse
 
@@ -89,14 +102,7 @@ if __name__ == "__main__":
                 y = int(p["y"] * image.shape[0])
                 cv2.circle(image, (x, y), 5, color=colors[j % 6], thickness=3 )
                 cv2.putText(image, f"{j}", org=(x, y), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.5, color=colors[j % 6], thickness=2)
-            xmin = min((p["x"] for p in points))
-            xmax = max((p["x"] for p in points))
-            ymin = min((p["y"] for p in points))
-            ymax = max((p["y"] for p in points))
-            xmin = int(xmin * image.shape[1])
-            xmax = int(xmax * image.shape[1])
-            ymin = int(ymin * image.shape[0])
-            ymax = int(ymax * image.shape[0])
+            xmin, ymin, xmax, ymax = get_corner_points(points)
             ratio = (ymax - ymin) / (xmax - xmin)
             y13 = int(landmarks[13]["y"] * image.shape[0])
             y14 = int(landmarks[14]["y"] * image.shape[0])
