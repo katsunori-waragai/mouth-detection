@@ -8,10 +8,11 @@ TODO:
 - 顔検出部分にOpenCVのHaarCascadeを前提とせずに、他の検出器の検出結果を持ってこれるようすること。
 - 判定のしきい値の調整を考えること
 - ロジックと表示を分離すること
-- 画像上の上下方向と、顔の向きの空間的な配置とが違ってくるので、このままでは実用にならない。
 
 """
+from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Tuple
 import os
 
 import cv2
@@ -24,11 +25,73 @@ def distance(x, y):
 
 # function to get coordinates
 def get_coords(p1):
-    try:
-        return int(p1[0][0][0]), int(p1[0][0][1])
-    except:
+    if p1 is None:
+        return None
+    if type(p1[0]) in (type(1), type(3.14)):
+        return int(p1[0]), int(p1[1])
+    elif type(p1[0][0]) in (type(1), type(3.14)):
         return int(p1[0][0]), int(p1[0][1])
+    elif type(p1[0][0]) in (type([1,2]), type((3.14, ))):
+        return int(p1[0][0][0]), int(p1[0][0][1])
+    else:
+        return int(p1[0][0][0]), int(p1[0][0][1])
 
+
+@dataclass
+class NodDetector:
+    p0: Tuple[float] = None
+    p1: Tuple[float] = None
+    # Parameters for lucas kanade optical flow
+    lk_params = dict(winSize=(15, 15),
+                     maxLevel=2,
+                     criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
+
+    # define movement thresholds
+    max_head_movement = 20
+    movement_threshold = 50
+    gesture_threshold = 175
+
+    gesture = False
+    x_movement = 0
+    y_movement = 0
+    gesture_show = 60  # number of frames a gesture is shown
+
+    old_gray = None
+    frame_gray = None
+    def get_gesture(self, frame):
+        gesture = False
+
+        self.frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        if self.old_gray is None or self.frame_gray is None:
+            # print("warn skipped calcOpticalFlowPyrLK()")
+            if self.frame_gray is not None:
+                self.old_gray = self.frame_gray.copy()
+            return False, None, None, None
+        self.p1, st, err = cv2.calcOpticalFlowPyrLK(self.old_gray, self.frame_gray, self.p0, None, **self.lk_params)
+        assert self.p1 is not None
+        # get the xy coordinates for points p0 and p1
+        a, b = get_coords(self.p0), get_coords(self.p1)
+        self.x_movement += abs(a[0] - b[0])
+        self.y_movement += abs(a[1] - b[1])
+        self.p0 = self.p1.copy()
+        if self.frame_gray is not None:
+            self.old_gray = self.frame_gray.copy()
+
+        if self.x_movement > self.gesture_threshold:
+            gesture = 'No'
+        elif self.y_movement > self.gesture_threshold:
+            gesture = 'Yes'
+
+        return gesture, self.p1, self.x_movement, self.y_movement
+
+    def post_process(self):
+        if self.gesture and self.gesture_show > 0:
+            self.gesture_show -= 1
+        if self.gesture_show == 0:
+            self.gesture = False
+            self.x_movement = 0
+            self.y_movement = 0
+            self.gesture_show = 60  # number of frames a gesture is shown
 
 if __name__ == "__main__":
     import argparse
@@ -53,10 +116,6 @@ if __name__ == "__main__":
                           qualityLevel=0.3,
                           minDistance=7,
                           blockSize=7)
-    # Parameters for lucas kanade optical flow
-    lk_params = dict(winSize=(15, 15),
-                     maxLevel=2,
-                     criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
 
     xmlname = Path('haarcascade_frontalface_alt.xml')
 
@@ -69,11 +128,6 @@ if __name__ == "__main__":
 
     # define font and text color
     font = cv2.FONT_HERSHEY_SIMPLEX
-
-    # define movement threshodls
-    max_head_movement = 20
-    movement_threshold = 50
-    gesture_threshold = 175
 
     # find the face in the image
     face_found = False
@@ -93,46 +147,31 @@ if __name__ == "__main__":
     face_center = x + w / 2, y + h / 3
     p0 = np.array([[face_center]], np.float32)
 
-    gesture = False
-    x_movement = 0
-    y_movement = 0
-    gesture_show = 60  # number of frames a gesture is shown
+    nod_detector = NodDetector(p0=p0)
+
+    counter = 0
 
     while True:
         ret, frame = cap.read()
         if frame is None:
             break
-        old_gray = frame_gray.copy()
-        frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        p1, st, err = cv2.calcOpticalFlowPyrLK(old_gray, frame_gray, p0, None, **lk_params)
-        cv2.circle(frame, get_coords(p1), 4, (0, 0, 255), -1)
-        cv2.circle(frame, get_coords(p0), 4, (255, 0, 0))
-
-        # get the xy coordinates for points p0 and p1
-        a, b = get_coords(p0), get_coords(p1)
-        x_movement += abs(a[0] - b[0])
-        y_movement += abs(a[1] - b[1])
+        counter += 1
+        gesture, p1, x_movement, y_movement = nod_detector.get_gesture(frame)
+        mean_count = np.mean(frame.flatten())
+        if nod_detector.p1 is not None:
+            cv2.circle(frame, center=get_coords(nod_detector.p1), radius=4, color=(0, 0, 255), thickness=-1)
+        if nod_detector.p0 is not None:
+            cv2.circle(frame, center=get_coords(nod_detector.p0), radius=4, color=(255, 0, 0))
 
         text = 'x_movement: ' + str(x_movement)
         if not gesture: cv2.putText(frame, text, (50, 50), font, 0.8, (0, 0, 255), 2)
         text = 'y_movement: ' + str(y_movement)
         if not gesture: cv2.putText(frame, text, (50, 100), font, 0.8, (0, 0, 255), 2)
 
-        if x_movement > gesture_threshold:
-            gesture = 'No'
-        elif y_movement > gesture_threshold:
-            gesture = 'Yes'
-        if gesture and gesture_show > 0:
+        if nod_detector.gesture and nod_detector.gesture_show > 0:
             cv2.putText(frame, 'Gesture Detected: ' + gesture, (50, 50), font, 1.2, (0, 0, 255), 3)
-            gesture_show -= 1
-        if gesture_show == 0:
-            gesture = False
-            x_movement = 0
-            y_movement = 0
-            gesture_show = 60  # number of frames a gesture is shown
 
-        # print distance(get_coords(p0), get_coords(p1))
-        p0 = p1
+        nod_detector.post_process()
 
         cv2.imshow('image', frame)
         out.write(frame)
