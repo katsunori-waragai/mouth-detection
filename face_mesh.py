@@ -15,7 +15,7 @@ import cv2
 import mediapipe as mp
 
 
-def get_corner_points(points: List[Dict]) -> List[float]:
+def get_corner_points(points: List[Dict], image) -> List[float]:
     xmin = min((p["x"] for p in points))
     xmax = max((p["x"] for p in points))
     ymin = min((p["y"] for p in points))
@@ -102,7 +102,7 @@ if __name__ == "__main__":
                 y = int(p["y"] * image.shape[0])
                 cv2.circle(image, (x, y), 5, color=colors[j % 6], thickness=3 )
                 cv2.putText(image, f"{j}", org=(x, y), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.5, color=colors[j % 6], thickness=2)
-            xmin, ymin, xmax, ymax = get_corner_points(points)
+            xmin, ymin, xmax, ymax = get_corner_points(points, image)
             ratio = (ymax - ymin) / (xmax - xmin)
             y13 = int(landmarks[13]["y"] * image.shape[0])
             y14 = int(landmarks[14]["y"] * image.shape[0])
