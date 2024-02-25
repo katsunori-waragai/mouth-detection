@@ -9,13 +9,13 @@ https://storage.googleapis.com/mediapipe-assets/documentation/mediapipe_face_lan
 Extract the landmarks of pose tracker in python
 https://github.com/google/mediapipe/issues/1020
 """
+from typing import List, Dict
 
 import cv2
 import mediapipe as mp
 
 
-def get_corner_points(points):
-    global xmin, xmax, ymin, ymax
+def get_corner_points(points: List[Dict]) -> List[float]:
     xmin = min((p["x"] for p in points))
     xmax = max((p["x"] for p in points))
     ymin = min((p["y"] for p in points))
