@@ -13,11 +13,15 @@ pip install mediapipe
 mediapipe を用いて顔のメッシュを描画するサンプルスクリプトを改造。
 
 ```
-$ python face_mesh.py -h
+$ python3 face_mesh.py -h
 
-$ python face_mesh.py /dev/video0
+$ python3 face_mesh.py /dev/video0
 
 ```
+
+## example
+<img src="doc/open_mouth.png" width=320>
+<img src="doc/close_mouth.png" width=320>
 
 ## 制限
 - 一つの顔についてだけ処理する。
