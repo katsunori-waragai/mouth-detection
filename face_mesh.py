@@ -89,7 +89,7 @@ class MouthAnalyzer:
         ]
 
     @staticmethod
-    def get_corner_points(points: List[dict], image_shape) -> Tuple[int, int, int, int]:
+    def get_corner_points(points: List[dict], image_shape: Tuple[int, int]) -> Tuple[int, int, int, int]:
         x_values = [p["x"] for p in points]
         y_values = [p["y"] for p in points]
 
@@ -99,7 +99,7 @@ class MouthAnalyzer:
         ymax = int(max(y_values) * image_shape[0])
         return xmin, ymin, xmax, ymax
 
-    def build_face_info(self, face_landmarks, image_shape) -> Optional[FaceInfo]:
+    def build_face_info(self, face_landmarks, image_shape: Tuple[int, int]) -> Optional[FaceInfo]:
         landmarks = self.normalize_landmarks(face_landmarks)
         points = [landmarks[i] for i in self.KEY_POINTS]
         xmin, ymin, xmax, ymax = self.get_corner_points(points, image_shape)
