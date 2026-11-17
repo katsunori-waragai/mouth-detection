@@ -15,16 +15,30 @@ from typing import List, Optional, Tuple
 
 import cv2
 import mediapipe as mp
+import numpy as np
 
 
 @dataclass
 class FaceInfo:
+    """顔ランドマークから抽出した口領域の情報を保持するデータクラス。
+
+    Attributes:
+        landmarks: 正規化された顔ランドマークのリスト。
+        box: 口領域の外接矩形 (xmin, ymin, xmax, ymax)。
+        mouth_ratio: 口の開口度を示す比率。
+    """
+
     landmarks: List[dict]
     box: Tuple[int, int, int, int]
     mouth_ratio: float
 
 
 class FaceMeshProcessor:
+    """MediaPipe の顔メッシュ検出処理をラップするクラス。
+
+    このクラスはフレームから顔ランドマークを抽出し、他のクラスが
+    解析しやすい形式で結果を返す役割を担う。
+    """
     def __init__(
         self,
         max_num_faces: int = 1,
@@ -42,7 +56,7 @@ class FaceMeshProcessor:
             min_tracking_confidence=min_tracking_confidence,
         )
 
-    def process(self, image):
+    def process(self, image: np.ndarray):
         image.flags.writeable = False
         rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         results = self.face_mesh.process(rgb_image)
@@ -54,6 +68,12 @@ class FaceMeshProcessor:
 
 
 class MouthAnalyzer:
+    """顔ランドマークから口の位置と開口度を計算するクラス。
+
+    口の動作分析では、特定のランドマークの位置関係から口の矩形と
+    開き具合を定量化する。
+    """
+
     KEY_POINTS = (0, 13, 14, 17, 57, 287)
 
     @staticmethod
@@ -99,12 +119,18 @@ class MouthAnalyzer:
 
 
 class FaceMeshVisualizer:
+    """検出した顔情報を OpenCV で描画するクラス。
+
+    顔メッシュの線、特定ポイント、口領域の矩形、開口度テキストを
+    画像に重ねて表示する。
+    """
+
     def __init__(self) -> None:
         self.mp_drawing = mp.solutions.drawing_utils
         self.mp_drawing_styles = mp.solutions.drawing_styles
         self.mp_face_mesh = mp.solutions.face_mesh
 
-    def draw_face_mesh(self, image, face_landmarks) -> None:
+    def draw_face_mesh(self, image: np.ndarray, face_landmarks) -> None:
         self.mp_drawing.draw_landmarks(
             image=image,
             landmark_list=face_landmarks,
@@ -127,7 +153,7 @@ class FaceMeshVisualizer:
             connection_drawing_spec=self.mp_drawing_styles.get_default_face_mesh_iris_connections_style(),
         )
 
-    def draw_face_info(self, image, face_info: FaceInfo) -> None:
+    def draw_face_info(self, image: np.ndarray, face_info: FaceInfo) -> None:
         colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (128, 128, 0), (0, 128, 128), (0, 0, 128)]
         points = [face_info.landmarks[i] for i in MouthAnalyzer.KEY_POINTS]
 
@@ -159,6 +185,12 @@ class FaceMeshVisualizer:
 
 
 class FaceMeshApp:
+    """動画またはカメラ入力を処理して顔メッシュ解析を実行するアプリ本体。
+
+    Args:
+        source: 入力元の動画ファイルパスまたはカメラデバイスパス。
+    """
+
     def __init__(self, source: str) -> None:
         self.source = source
         self.processor = FaceMeshProcessor()
