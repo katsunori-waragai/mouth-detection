@@ -10,8 +10,8 @@ Extract the landmarks of pose tracker in python
 https://github.com/google/mediapipe/issues/1020
 """
 import argparse
-from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from dataclasses import dataclass, field
+from typing import Any, List, Optional, Tuple
 
 import cv2
 import mediapipe as mp
@@ -56,7 +56,7 @@ class FaceMeshProcessor:
             min_tracking_confidence=min_tracking_confidence,
         )
 
-    def process(self, image: np.ndarray):
+    def process(self, image: np.ndarray) -> Any:
         image.flags.writeable = False
         rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         results = self.face_mesh.process(rgb_image)
@@ -77,7 +77,7 @@ class MouthAnalyzer:
     KEY_POINTS = (0, 13, 14, 17, 57, 287)
 
     @staticmethod
-    def normalize_landmarks(face_landmarks) -> List[dict]:
+    def normalize_landmarks(face_landmarks: Any) -> List[dict]:
         return [
             {
                 "x": data_point.x,
@@ -99,7 +99,11 @@ class MouthAnalyzer:
         ymax = int(max(y_values) * image_shape[0])
         return xmin, ymin, xmax, ymax
 
-    def build_face_info(self, face_landmarks, image_shape: Tuple[int, int]) -> Optional[FaceInfo]:
+    def build_face_info(
+        self,
+        face_landmarks: Any,
+        image_shape: Tuple[int, int],
+    ) -> Optional[FaceInfo]:
         landmarks = self.normalize_landmarks(face_landmarks)
         points = [landmarks[i] for i in self.KEY_POINTS]
         xmin, ymin, xmax, ymax = self.get_corner_points(points, image_shape)
@@ -130,7 +134,11 @@ class FaceMeshVisualizer:
         self.mp_drawing_styles = mp.solutions.drawing_styles
         self.mp_face_mesh = mp.solutions.face_mesh
 
-    def draw_face_mesh(self, image: np.ndarray, face_landmarks) -> None:
+    def draw_face_mesh(
+        self,
+        image: np.ndarray,
+        face_landmarks: Any,
+    ) -> None:
         self.mp_drawing.draw_landmarks(
             image=image,
             landmark_list=face_landmarks,
@@ -184,6 +192,7 @@ class FaceMeshVisualizer:
         )
 
 
+@dataclass
 class FaceMeshApp:
     """動画またはカメラ入力を処理して顔メッシュ解析を実行するアプリ本体。
 
@@ -191,13 +200,12 @@ class FaceMeshApp:
         source: 入力元の動画ファイルパスまたはカメラデバイスパス。
     """
 
-    def __init__(self, source: str) -> None:
-        self.source = source
-        self.processor = FaceMeshProcessor()
-        self.analyzer = MouthAnalyzer()
-        self.visualizer = FaceMeshVisualizer()
+    source: str
+    processor: FaceMeshProcessor = field(default_factory=FaceMeshProcessor)
+    analyzer: MouthAnalyzer = field(default_factory=MouthAnalyzer)
+    visualizer: FaceMeshVisualizer = field(default_factory=FaceMeshVisualizer)
 
-    def open_capture(self):
+    def open_capture(self) -> cv2.VideoCapture:
         if self.source.startswith("/dev/video"):
             video_num = int(self.source.replace("/dev/video", ""))
             return cv2.VideoCapture(video_num)
