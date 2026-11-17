@@ -121,7 +121,7 @@ class MouthAnalyzer:
             mouth_ratio=mouth_ratio,
         )
 
-
+@dataclass
 class FaceMeshVisualizer:
     """検出した顔情報を OpenCV で描画するクラス。
 
@@ -129,10 +129,9 @@ class FaceMeshVisualizer:
     画像に重ねて表示する。
     """
 
-    def __init__(self) -> None:
-        self.mp_drawing = mp.solutions.drawing_utils
-        self.mp_drawing_styles = mp.solutions.drawing_styles
-        self.mp_face_mesh = mp.solutions.face_mesh
+    mp_drawing = mp.solutions.drawing_utils
+    mp_drawing_styles = mp.solutions.drawing_styles
+    mp_face_mesh = mp.solutions.face_mesh
 
     def draw_face_mesh(
         self,
