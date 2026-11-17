@@ -19,7 +19,6 @@ $ python3 face_mesh.py /dev/video0
 
 ```
 
-
 ## example
 <img src="doc/open_mouth.png" width=320>
 <img src="doc/close_mouth.png" width=320>
